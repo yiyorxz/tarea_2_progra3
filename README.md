@@ -1,2 +1,2 @@
 # tarea_2_progra3
-tarea de colas encoladas progra3
+Tarea de listas dobles enlazadas con pilas y colas para un sistema de aeropuerto
