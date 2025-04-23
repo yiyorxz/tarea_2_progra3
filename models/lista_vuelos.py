@@ -1,15 +1,28 @@
 # models/lista_vuelos.py
 from models.nodo import Nodo
+from sqlalchemy.orm import Session
+from models.db_models import DBVuelo
 
 class ListaVuelos:
-    def __init__(self, db_session):
+    def __init__(self, db_session: Session):
         self.cabeza = None
         self.cola = None
         self.tamano = 0
         self.session = db_session
     
+    def actualizar_posiciones_db(self):
+        """Actualiza todas las posiciones en la base de datos según el orden actual"""
+        actual = self.cabeza
+        posicion = 0
+        while actual is not None:
+            vuelo_db = self.session.query(DBVuelo).filter(DBVuelo.id == actual.vuelo.id).first()
+            if vuelo_db:
+                vuelo_db.posicion = posicion
+            posicion += 1
+            actual = actual.siguiente
+        self.session.commit()
+    
     def insertar_al_frente(self, vuelo):
-        """Inserta un vuelo al inicio (para emergencias)"""
         nuevo_nodo = Nodo(vuelo)
         if self.cabeza is None:
             self.cabeza = self.cola = nuevo_nodo
@@ -18,9 +31,9 @@ class ListaVuelos:
             self.cabeza.anterior = nuevo_nodo
             self.cabeza = nuevo_nodo
         self.tamano += 1
+        self.actualizar_posiciones_db()
     
     def insertar_al_final(self, vuelo):
-        """Inserta un vuelo al final (vuelos regulares)"""
         nuevo_nodo = Nodo(vuelo)
         if self.cabeza is None:
             self.cabeza = self.cola = nuevo_nodo
@@ -29,25 +42,18 @@ class ListaVuelos:
             self.cola.siguiente = nuevo_nodo
             self.cola = nuevo_nodo
         self.tamano += 1
+        self.actualizar_posiciones_db()
     
     def obtener_primero(self):
-        """Retorna el primer vuelo sin removerlo"""
-        if self.cabeza is None:
-            return None
-        return self.cabeza.vuelo
+        return self.cabeza.vuelo if self.cabeza else None
     
     def obtener_ultimo(self):
-        """Retorna el último vuelo sin removerlo"""
-        if self.cola is None:
-            return None
-        return self.cola.vuelo
+        return self.cola.vuelo if self.cola else None
     
     def longitud(self):
-        """Retorna el número total de vuelos"""
         return self.tamano
     
     def insertar_en_posicion(self, vuelo, posicion):
-        """Inserta un vuelo en una posición específica"""
         if posicion < 0 or posicion > self.tamano:
             raise IndexError("Posición fuera de rango")
         
@@ -66,9 +72,9 @@ class ListaVuelos:
             actual.siguiente.anterior = nuevo_nodo
             actual.siguiente = nuevo_nodo
             self.tamano += 1
+            self.actualizar_posiciones_db()
     
     def extraer_de_posicion(self, posicion):
-        """Remueve y retorna el vuelo en la posición dada"""
         if posicion < 0 or posicion >= self.tamano:
             raise IndexError("Posición fuera de rango")
         
@@ -93,10 +99,10 @@ class ListaVuelos:
             vuelo = actual.vuelo
         
         self.tamano -= 1
+        self.actualizar_posiciones_db()
         return vuelo
     
     def listar_vuelos(self):
-        """Retorna todos los vuelos en orden"""
         vuelos = []
         actual = self.cabeza
         while actual is not None:
@@ -105,7 +111,6 @@ class ListaVuelos:
         return vuelos
     
     def reordenar_vuelos(self, posicion_origen, posicion_destino):
-        """Reordena vuelos moviendo uno de posición"""
         if posicion_origen < 0 or posicion_origen >= self.tamano or \
            posicion_destino < 0 or posicion_destino >= self.tamano:
             raise IndexError("Posiciones fuera de rango")

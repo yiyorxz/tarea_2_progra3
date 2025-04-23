@@ -19,6 +19,7 @@ class VueloCreate(VueloBase):
 
 class Vuelo(VueloBase):
     id: int
+    posicion: float
     
     class Config:
         orm_mode = True

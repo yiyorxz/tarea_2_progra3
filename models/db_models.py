@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy import Column, Integer, String, DateTime, Enum, Numeric
 from database.session import Base
 from enum import Enum as PyEnum
 
@@ -16,3 +16,4 @@ class DBVuelo(Base):
     hora = Column(DateTime, nullable=False)
     origen = Column(String(100), nullable=False)
     destino = Column(String(100), nullable=False)
+    posicion = Column(Numeric, nullable=False, default=0)  # Nueva columna para orden
